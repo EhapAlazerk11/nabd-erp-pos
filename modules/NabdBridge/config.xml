@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module>
+    <namespace>NabdBridge</namespace>
+    <version>1.0.0</version>
+    <author>Ahmed</author>
+    <name>Nabd Bridge</name>
+    <description>REST API bridge for Nabd external integration with dedicated API token authentication</description>
+</module>
