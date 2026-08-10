@@ -1,15 +1,18 @@
+
+
 <?php
 
 namespace App\Http\Middleware;
 
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
+use Illuminate\Http\Request;
 
 class Authenticate extends Middleware
 {
     /**
      * Get the path the user should be redirected to when they are not authenticated.
      *
-     * @param  \Illuminate\Http\Request $request
+     * @param  Request     $request
      * @return string|null
      */
     protected function redirectTo( $request )
@@ -19,7 +22,9 @@ class Authenticate extends Middleware
                 'redirect' => $request->fullUrl(),
             ];
 
-            $request->session()->put( 'redirect', $request->fullUrl() );
+            if ( $request->hasSession() ) {
+                $request->session()->put( 'redirect', $request->fullUrl() );
+            }
 
             return ns()->route( 'ns.login', $data );
         }
