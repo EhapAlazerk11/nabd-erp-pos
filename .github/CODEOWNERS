@@ -1,0 +1,8 @@
+# Every PR gets a review.
+*       @EhapAlazerk11 @Ahmed2005-CODE
+
+# Anything touching the shared schema or CI needs Ehab specifically.
+/prisma/                @EhapAlazerk11
+/database/migrations/   @EhapAlazerk11
+/src/database/          @EhapAlazerk11
+/.github/               @EhapAlazerk11

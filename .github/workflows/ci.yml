@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, staging, main]
+  push:
+    branches: [dev, staging, main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: nabd
+          POSTGRES_PASSWORD: nabd
+          POSTGRES_DB: nabd_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 10s
+          --health-timeout 5s --health-retries 5
+
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: nabd_test
+      DB_USERNAME: nabd
+      DB_PASSWORD: nabd
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, pdo, pdo_pgsql, bcmath, intl, gd, zip
+          coverage: none
+
+      - name: Cache composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('composer.lock') }}
+
+      - run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare env
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      # This repo owns the schema, so a migration that does not apply cleanly
+      # is a release blocker for every other service too.
+      - run: php artisan migrate --force
+      - run: php artisan test

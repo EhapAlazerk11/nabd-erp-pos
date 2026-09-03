@@ -1,0 +1,42 @@
+name: Deploy
+
+# dev and staging deploy automatically. Production waits for a manual
+# approval on the `production` GitHub Environment.
+
+on:
+  push:
+    branches: [dev, staging, main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: >-
+        ${{ github.ref == 'refs/heads/main' && 'production'
+         || github.ref == 'refs/heads/staging' && 'staging'
+         || 'development' }}
+      url: ${{ vars.APP_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Show target
+        run: |
+          echo "Branch    : ${{ github.ref_name }}"
+          echo "App URL   : ${{ vars.APP_URL }}"
+          echo "DO App ID : ${{ vars.DO_APP_ID }}"
+
+      # TODO: wire up once the DigitalOcean apps exist — see nabd-infra.
+      # doctl apps create-deployment "${{ vars.DO_APP_ID }}" --wait
+      - name: Deploy
+        run: echo "Deploy step not wired yet."
