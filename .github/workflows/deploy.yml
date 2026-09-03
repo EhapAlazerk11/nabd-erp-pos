@@ -1,7 +1,10 @@
 name: Deploy
 
-# dev and staging deploy automatically. Production waits for a manual
-# approval on the `production` GitHub Environment.
+# dev and staging deploy automatically. Production waits for a manual approval
+# on the `production` GitHub Environment.
+#
+# The job is skipped until DO_APP_ID is set as an environment variable, so an
+# unconfigured repo reports "skipped" rather than a red X on every push.
 
 on:
   push:
@@ -15,6 +18,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: vars.DO_APP_ID != ''
     environment:
       name: >-
         ${{ github.ref == 'refs/heads/main' && 'production'
@@ -30,13 +34,5 @@ jobs:
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
-      - name: Show target
-        run: |
-          echo "Branch    : ${{ github.ref_name }}"
-          echo "App URL   : ${{ vars.APP_URL }}"
-          echo "DO App ID : ${{ vars.DO_APP_ID }}"
-
-      # TODO: wire up once the DigitalOcean apps exist — see nabd-infra.
-      # doctl apps create-deployment "${{ vars.DO_APP_ID }}" --wait
       - name: Deploy
-        run: echo "Deploy step not wired yet."
+        run: doctl apps create-deployment "${{ vars.DO_APP_ID }}" --wait
