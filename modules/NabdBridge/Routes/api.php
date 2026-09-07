@@ -7,6 +7,7 @@ use Modules\NabdBridge\Http\Controllers\NabdCustomerController;
 use Modules\NabdBridge\Http\Controllers\NabdOrderController;
 use Modules\NabdBridge\Http\Controllers\NabdProductController;
 use Modules\NabdBridge\Http\Controllers\NabdReportController;
+use Modules\NabdBridge\Http\Controllers\NabdStockController;
 use Modules\NabdBridge\Http\Middleware\NabdTokenMiddleware;
 
 /*
@@ -53,6 +54,8 @@ Route::middleware([SubstituteBindings::class, NabdTokenMiddleware::class])
             ->where('id', '[0-9]+');
         Route::get('products/{id}/stock', [NabdProductController::class, 'stock'])
             ->where('id', '[0-9]+');
+        Route::post('products/{id}/adjust-stock', [NabdStockController::class, 'adjustStock'])
+            ->where('id', '[0-9]+');
 
         // ── Categories ───────────────────────────────────────────────────
         Route::get('categories', [NabdProductController::class, 'categories']);
@@ -63,6 +66,8 @@ Route::middleware([SubstituteBindings::class, NabdTokenMiddleware::class])
             ->where('id', '[0-9]+');
         Route::post('orders', [NabdOrderController::class, 'store']);
         Route::patch('orders/{id}/status', [NabdOrderController::class, 'updateStatus'])
+            ->where('id', '[0-9]+');
+        Route::post('orders/{id}/refund', [NabdOrderController::class, 'refund'])
             ->where('id', '[0-9]+');
 
         // ── Customers ────────────────────────────────────────────────────
