@@ -146,4 +146,55 @@ class NabdOrderController extends Controller
             'data' => $order->only(['id', 'delivery_status', 'process_status', 'payment_status', 'updated_at']),
         ]);
     }
+
+    /**
+     * POST /api/nabd/orders/{id}/refund
+     *
+     * Processes a refund via the NexoPOS OrdersService so that
+     * stock returns, tax recalculation, and accounting entries
+     * are all handled correctly.
+     *
+     * Body:
+     *   - products (array, required): each with id, quantity, unit_price, condition (returnable|damaged)
+     *   - payment (object, required): { identifier: "cash-payment"|"account-payment"|... }
+     *   - total (numeric, required)
+     *   - refund_shipping (bool, optional)
+     */
+    public function refund(Request $request, int $id): JsonResponse
+    {
+        $order = Order::findOrFail($id);
+
+        $fields = $request->validate([
+            'products'                => ['required', 'array', 'min:1'],
+            'products.*.id'           => ['required', 'integer'],
+            'products.*.quantity'     => ['required', 'numeric', 'min:0.001'],
+            'products.*.unit_price'   => ['required', 'numeric', 'min:0'],
+            'products.*.condition'    => ['required', 'string', 'in:returnable,damaged'],
+            'payment'                 => ['required', 'array'],
+            'payment.identifier'      => ['required', 'string'],
+            'total'                   => ['required', 'numeric', 'min:0'],
+            'refund_shipping'         => ['nullable', 'boolean'],
+        ]);
+
+        try {
+            $result = $this->ordersService->refundOrder($order, $fields);
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => $result['message'] ?? 'Order refunded successfully.',
+                'data'    => [
+                    'order_id'        => $order->id,
+                    'refund_id'       => $result['data']['orderRefund']->id ?? null,
+                    'refund_total'    => $result['data']['orderRefund']->total ?? 0,
+                    'payment_status'  => $order->fresh()->payment_status,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
 }
+
