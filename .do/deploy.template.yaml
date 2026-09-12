@@ -1,17 +1,11 @@
 spec:
-  name: nexopos-setup
-  databases:
-  - name: nexoposdb
-    engine: MYSQL
-    production: true
-    cluster_name: ns
-    db_name: nexopos
-    db_user: nexoposuser
+  name: nabd-erp-pos
   services:
   - environment_slug: php
-    name: nexopos
-    git:
-      repo_clone_url: https://github.com/blair2004/NexoPOS-4x
-      branch: v4.7.x
-    build_command: npm run prod
+    name: nabd-erp-pos
+    build_command: composer install --no-dev --optimize-autoloader && npm run build
     run_command: heroku-php-apache2 public/
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: basic-xxs
+
